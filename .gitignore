@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+app/videos/*
+!app/videos/.gitkeep
+app/outputs/*
+!app/outputs/.gitkeep
+app/cache/*
+!app/cache/.gitkeep
+client_secret.json
+youtube_token.json
