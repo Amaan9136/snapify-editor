@@ -34,7 +34,7 @@ class Config:
 
     OLLAMA_HOST = os.getenv("OLLAMA_HOST", "https://ollama.com")
     OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gpt-oss:20b-cloud")
     YOUTUBE_CLIENT_SECRETS_FILE = str(BASE_DIR / os.getenv("YOUTUBE_CLIENT_SECRETS_FILE", "client_secret.json"))
     YOUTUBE_TOKEN_FILE = str(BASE_DIR / os.getenv("YOUTUBE_TOKEN_FILE", "youtube_token.json"))
     YOUTUBE_REDIRECT_URI = os.getenv("YOUTUBE_REDIRECT_URI", "http://localhost:5000/youtube/oauth2callback")

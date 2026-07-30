@@ -28,7 +28,7 @@ One-time Google Cloud setup so Snapify Editor can upload/schedule Shorts on your
 - Click **Create**, then **Download JSON**
 
 ## 5. Install the credentials file
-- Save the downloaded file as `client_secret.json` in the project root (same folder as `run.py`)
+- Save the downloaded file as `client_secret.json` in the project root (same folder as `app.py`)
 - Confirm `.env` has:
   ```
   YOUTUBE_CLIENT_SECRETS_FILE=client_secret.json
@@ -37,7 +37,7 @@ One-time Google Cloud setup so Snapify Editor can upload/schedule Shorts on your
   ```
 
 ## 6. Authorize
-- Start the app (`python3 run.py`)
+- Start the app (`python3 app.py`)
 - Visit `http://localhost:5000/youtube/authorize`
 - Sign in with the Google account for the channel you want to upload to, accept the consent screen
 - You'll see "YouTube connected successfully" — a `youtube_token.json` is now saved in the project root and reused (and auto-refreshed) for future uploads

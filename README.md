@@ -28,12 +28,12 @@ Edit `.env`:
 
 Run:
 ```bash
-python3 run.py
+python3 app.py
 ```
 Open `http://localhost:5000`.
 
 ## Ollama
-`OLLAMA_HOST=https://ollama.com` with an API key (from `https://ollama.com/settings/keys`) uses Ollama's cloud models — no local GPU needed. To run fully local instead, set `OLLAMA_HOST=http://localhost:11434`, drop the API key, and `ollama pull llama3.2` first. Either way the app talks to the same `/api/chat` endpoint, so no code changes are needed to switch.
+`OLLAMA_HOST=https://ollama.com` with an API key (from `https://ollama.com/settings/keys`) uses Ollama's cloud models — no local GPU needed. To run fully local instead, set `OLLAMA_HOST=http://localhost:11434`, drop the API key, and `ollama pull gpt-oss:20b-cloud` first. Either way the app talks to the same `/api/chat` endpoint, so no code changes are needed to switch.
 
 ## Using it
 1. **Library** — drag & drop videos in, or use "Add videos". They're copied straight into `app/videos`.
@@ -66,7 +66,7 @@ app/
   videos/              your source videos (git-ignored)
   outputs/             rendered clips + splits (git-ignored)
   cache/               thumbnails + preview proxies (git-ignored)
-run.py
+app.py
 ```
 
 ## Notes

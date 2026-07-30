@@ -1,6 +1,5 @@
 import json
 import re
-
 import requests
 
 DEFAULT_TIMEOUT = 60
@@ -45,7 +44,7 @@ def _extract_json(text):
 
 def generate_metadata(app_config, context_description, extra_instructions=None):
     host = app_config.get("OLLAMA_HOST", "https://ollama.com").rstrip("/")
-    model = app_config.get("OLLAMA_MODEL", "llama3.2")
+    model = app_config.get("OLLAMA_MODEL", "gpt-oss:20b-cloud")
     prompt = PROMPT_TEMPLATE.format(context=context_description)
     if extra_instructions:
         prompt += f"\nAdditional instructions from the user: {extra_instructions}\n"
