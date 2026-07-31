@@ -61,6 +61,5 @@ const Api = (() => {
       body: JSON.stringify(payload),
     }),
     listJobs: () => _request('/youtube/jobs'),
-    health: () => _request('/api/health'),
   };
 })();

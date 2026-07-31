@@ -42,7 +42,7 @@ function debounce(fn, wait) {
 
 function switchView(viewName) {
   document.querySelectorAll('[data-view-panel]').forEach(panel => {
-    panel.hidden = panel.id !== `view-${viewName}`;
+    panel.classList.toggle('hidden', panel.id !== `view-${viewName}`);
   });
   document.querySelectorAll('.topbar-tab').forEach(tab => {
     tab.classList.toggle('is-active', tab.dataset.view === viewName);
@@ -52,27 +52,10 @@ function switchView(viewName) {
   if (viewName === 'library') LibraryView.refresh();
 }
 
-async function refreshHealthStrip() {
-  try {
-    const health = await Api.health();
-    for (const [service, info] of Object.entries(health)) {
-      const dot = document.querySelector(`.status-dot[data-service="${service}"]`);
-      if (dot) {
-        dot.dataset.ok = String(!!info.ok);
-        dot.title = `${service}: ${info.message || (info.ok ? 'ok' : 'not connected')}`;
-      }
-    }
-  } catch (e) {
-    console.warn('Health check failed', e);
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.topbar-tab').forEach(tab => {
     tab.addEventListener('click', () => switchView(tab.dataset.view));
   });
-  refreshHealthStrip();
-  setInterval(refreshHealthStrip, 30000);
   LibraryView.init();
   EditorView.init();
   ClipsView.init();

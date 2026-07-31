@@ -16,7 +16,7 @@ const PublishView = (() => {
       btn.addEventListener('click', () => {
         publishMode = btn.dataset.mode;
         document.querySelectorAll('.publish-mode-toggle .toggle-btn').forEach(b => b.classList.toggle('is-active', b === btn));
-        document.getElementById('schedule-datetime-row').hidden = publishMode !== 'schedule';
+        document.getElementById('schedule-datetime-row').classList.toggle('hidden', publishMode !== 'schedule');
       });
     });
 
@@ -32,16 +32,16 @@ const PublishView = (() => {
     document.getElementById('publish-privacy-field').value = 'private';
     publishMode = 'now';
     document.querySelectorAll('.publish-mode-toggle .toggle-btn').forEach(b => b.classList.toggle('is-active', b.dataset.mode === 'now'));
-    document.getElementById('schedule-datetime-row').hidden = true;
+    document.getElementById('schedule-datetime-row').classList.add('hidden');
 
     const dt = new Date(Date.now() + 60 * 60 * 1000);
     document.getElementById('schedule-datetime-field').value = dt.toISOString().slice(0, 16);
 
-    document.getElementById('publish-modal-backdrop').hidden = false;
+    document.getElementById('publish-modal-backdrop').classList.remove('hidden');
   }
 
   function closeModal() {
-    document.getElementById('publish-modal-backdrop').hidden = true;
+    document.getElementById('publish-modal-backdrop').classList.add('hidden');
     document.getElementById('publish-modal-preview').pause();
     activeClip = null;
   }

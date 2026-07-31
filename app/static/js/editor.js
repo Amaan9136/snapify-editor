@@ -2,26 +2,7 @@ const EditorView = (() => {
   let state = null;
 
   function freshState() {
-    return {
-      filename: null,
-      meta: null,
-      trimStart: 0,
-      trimEnd: 0,
-      splitPoints: [],
-      ratio: '9:16',
-      customRatio: { w: 21, h: 9 },
-      panStart: { x: 0.5, y: 0.5 },
-      panEnd: null,
-      settingPanTarget: 'start',
-      speed: 1.0,
-      brightness: 0.0,
-      contrast: 1.0,
-      saturation: 1.0,
-      mute: false,
-      volume: 1.0,
-      title: '',
-      queue: [],
-    };
+    return { filename: null, meta: null, trimStart: 0, trimEnd: 0, splitPoints: [], ratio: '9:16', customRatio: { w: 21, h: 9 }, panStart: { x: 0.5, y: 0.5 }, panEnd: null, settingPanTarget: 'start', speed: 1.0, brightness: 0.0, contrast: 1.0, saturation: 1.0, mute: false, volume: 1.0, title: '', queue: [], };
   }
 
   function init() {
@@ -192,7 +173,7 @@ const EditorView = (() => {
 
   function togglePlayIcon(isPlaying) {
     document.getElementById('icon-play').hidden = isPlaying;
-    document.getElementById('icon-pause').hidden = !isPlaying;
+    document.getElementById('icon-pause').classList.toggle('hidden', !isPlaying);
   }
 
   function applyPlaybackRate() {
@@ -214,7 +195,7 @@ const EditorView = (() => {
   function setRatio(ratio) {
     state.ratio = ratio;
     document.querySelectorAll('#ratio-picker button').forEach(b => b.classList.toggle('is-active', b.dataset.ratio === ratio));
-    document.getElementById('custom-ratio-row').hidden = ratio !== 'custom';
+    document.getElementById('custom-ratio-row').classList.toggle('hidden', ratio !== 'custom');
     document.getElementById('preview-frame').dataset.ratio = ratio === 'custom'
       ? `${state.customRatio.w}:${state.customRatio.h}` : ratio;
     if (ratio === 'custom') {

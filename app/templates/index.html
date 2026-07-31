@@ -7,18 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: { void: '#0b0d10', panel: '#14171b', 'panel-raised': '#1b1f24', inset: '#0e1013', hairline: '#2a2f36', 'hairline-soft': '#21252b', ink: { 1: '#eef0f2', 2: '#9aa1ab', 3: '#63696f' }, grade: { orange: '#ff7a1a', 'orange-dim': '#b85a12', teal: '#3ed6c4' }, danger: '#ef4444', },
-      fontFamily: { display: ['Space Grotesk', 'system-ui', 'sans-serif'], mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'], },
-      boxShadow: { panel: '0 8px 24px rgba(0,0,0,0.35)' },
-    },
-  },
-}
-</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body class="bg-void text-ink-1 font-display antialiased text-sm">
