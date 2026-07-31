@@ -52,8 +52,12 @@ const PublishView = (() => {
     btn.disabled = true;
     btn.textContent = '✨ Generating with Ollama…';
     try {
-      const context = `Filename: ${activeClip.source_filename || activeClip.filename}, ` +
-        `aspect ratio ${activeClip.ratio}, duration ${activeClip.duration ? activeClip.duration.toFixed(1) : '?'} seconds.`;
+      const context = `Clip Details:
+Title: ${document.getElementById('publish-title-field').value.trim() || 'None'}
+Description: ${document.getElementById('publish-description-field').value.trim() || 'None'}
+Hashtags: ${document.getElementById('publish-hashtags-field').value.trim() || 'None'}
+
+Use the clip details and current inputs to generate an improved, engaging YouTube title, description, and hashtags.`;
       const result = await Api.generateCaption(activeClip._id, context, null);
       document.getElementById('publish-title-field').value = result.title;
       document.getElementById('publish-description-field').value = result.description;

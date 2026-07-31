@@ -27,6 +27,8 @@ def build_auth_flow(app_config):
             f"Missing client secrets file at {app_config['YOUTUBE_CLIENT_SECRETS_FILE']}. "
             "See SETUP_YOUTUBE.md to create one in Google Cloud Console."
         )
+    if app_config["YOUTUBE_REDIRECT_URI"].startswith("http://"):
+        os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
     flow = Flow.from_client_secrets_file(
         app_config["YOUTUBE_CLIENT_SECRETS_FILE"],
         scopes=app_config["YOUTUBE_SCOPES"],
