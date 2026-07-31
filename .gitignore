@@ -11,3 +11,4 @@ app/cache/*
 client_secret.json
 youtube_token.json
 repomix-output.*
+operations

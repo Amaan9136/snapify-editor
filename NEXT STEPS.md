@@ -1,0 +1,1 @@
+1. No need to check health status, let the endpoint be in backend but should not be called or defined anywhere in the
