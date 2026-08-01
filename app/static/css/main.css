@@ -65,8 +65,12 @@
 .split-marker-chip { font-family: 'IBM Plex Mono', monospace; font-size: 11px; background: #1b1f24; border: 1px solid #2a2f36; padding: 4px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; color: #9aa1ab; }
 .split-marker-chip button { background: transparent; border: none; color: #63696f; cursor: pointer; font-size: 12px; }
 
-.render-queue-item { display: flex; justify-content: space-between; align-items: center; background: #14171b; border: 1px solid #2a2f36; border-radius: 8px; padding: 8px 12px; font-size: 12px; }
+.render-queue-item { display: flex; justify-content: space-between; align-items: center; background: #14171b; border: 1px solid #2a2f36; border-radius: 8px; padding: 8px 12px; font-size: 12px; flex-wrap: wrap; gap: 6px; }
 .render-queue-item button { background: transparent; border: none; color: #63696f; cursor: pointer; }
+.render-queue-item-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.progress-bar-track { width: 100%; height: 4px; background: #2a2f36; border-radius: 3px; overflow: hidden; }
+.progress-bar-fill { height: 100%; width: 0%; background: #ff7a1a; border-radius: 3px; transition: width 0.15s linear; }
+.progress-bar-fill.is-done { background: #3ed6c4; }
 
 .clip-card { background: #14171b; border: 1px solid #2a2f36; border-radius: 16px; overflow: hidden; position: relative; }
 .clip-card video { width: 100%; aspect-ratio: 9/16; object-fit: cover; background: #000; display: block; }
@@ -90,6 +94,9 @@
 
 input[type="range"] { accent-color: #ff7a1a; }
 
+.render-progress-row { display: none; align-items: center; gap: 8px; margin-bottom: 8px; }
+.render-progress-row.is-active { display: flex; }
+.render-progress-row span { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9aa1ab; white-space: nowrap; }
 .logs-list { background: #0e1013; border: 1px solid #2a2f36; border-radius: 12px; padding: 6px; height: calc(100vh - 260px); min-height: 320px; overflow-y: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
 .logs-list.logs-list-embedded { height: 220px; min-height: 220px; }
 .log-row { display: grid; grid-template-columns: 84px 90px 1fr; gap: 10px; padding: 5px 8px; border-radius: 6px; align-items: baseline; }

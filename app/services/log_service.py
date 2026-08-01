@@ -20,13 +20,15 @@ def init_log_streaming(app):
     handler.setLevel(logging.INFO)
     handler.setFormatter(logging.Formatter("%(message)s"))
     logging.getLogger().addHandler(handler)
-def log_frontend(message, level="info", source="app"):
+def log_frontend(message, level="info", source="app", progress=None, clip_key=None):
     event = {
         "id": next(_lock_counter),
         "ts": time.time(),
         "level": level,
         "source": source,
         "message": message,
+        "progress": progress,
+        "clip_key": clip_key,
     }
     for q in list(_subscribers):
         try:

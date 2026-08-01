@@ -76,7 +76,7 @@ def _render_one(params):
     out_name = f"{Path(filename).stem}_{params['ratio_key'].replace(':', 'x')}_{uuid.uuid4().hex[:8]}.mp4"
     out_dir = Path(current_app.config["OUTPUTS_FOLDER"]) / "renders"
     out_path = out_dir / out_name
-    log_service.log_frontend(f"Rendering {filename} -> {out_name} ({params['ratio_key']})", source="editor")
+    log_service.log_frontend(f"Rendering {filename} -> {out_name} ({params['ratio_key']})", source="editor", clip_key=out_name)
     render_result = ffmpeg_service.render_reel(
         path, out_path,
         start=params["start"], end=params["end"],
@@ -84,6 +84,8 @@ def _render_one(params):
         volume=params["volume"], mute=params["mute"], speed=params["speed"],
         brightness=params["brightness"], contrast=params["contrast"], saturation=params["saturation"],
         fit_pad=params["fit_pad"],
+        on_log=lambda msg: log_service.log_frontend(msg, source="editor", clip_key=out_name),
+        on_progress=lambda pct: log_service.log_frontend(f"Encoding {out_name}: {pct*100:.0f}%", source="editor", progress=pct, clip_key=out_name),
     )
     clip_id = None
     try:
@@ -106,7 +108,7 @@ def _render_one(params):
         clip_id = str(clip_doc["_id"])
     except Exception:
         pass
-    log_service.log_frontend(f"Render complete: {out_name}", source="editor")
+    log_service.log_frontend(f"Render complete: {out_name}", source="editor", progress=1.0, clip_key=out_name)
     return {
         "clip_id": clip_id,
         "filename": out_name,

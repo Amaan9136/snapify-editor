@@ -358,9 +358,12 @@ const EditorView = (() => {
   function renderQueueUI() {
     const list = document.getElementById('render-queue-list');
     list.innerHTML = state.queue.map((c, i) => `
-      <div class="render-queue-item">
-        <span>${escapeHtml(c.title)} · ${c.ratio} · ${formatTimecode(c.start)}–${formatTimecode(c.end)}</span>
-        <button data-index="${i}">&times;</button>
+      <div class="render-queue-item" data-queue-index="${i}">
+        <div class="render-queue-item-row">
+          <span>${escapeHtml(c.title)} · ${c.ratio} · ${formatTimecode(c.start)}–${formatTimecode(c.end)}</span>
+          <button data-index="${i}">&times;</button>
+        </div>
+        <div class="progress-bar-track"><div class="progress-bar-fill" data-queue-fill="${i}"></div></div>
       </div>
     `).join('');
     list.querySelectorAll('button').forEach(btn => {
@@ -370,11 +373,23 @@ const EditorView = (() => {
     document.getElementById('btn-render-queue').disabled = state.queue.length === 0;
   }
 
+  function setQueueProgress(index, pct) {
+    const fill = document.querySelector(`[data-queue-fill="${index}"]`);
+    if (!fill) return;
+    fill.style.width = `${Math.round(pct * 100)}%`;
+    fill.classList.toggle('is-done', pct >= 1);
+  }
+
   async function renderQueue() {
     if (!state.queue.length) return;
     const btn = document.getElementById('btn-render-queue');
     btn.disabled = true;
     btn.textContent = 'Rendering…';
+    LogsView.onQueueProgress((clipKey, pct) => {
+      const seen = LogsView.seenClipKeys();
+      const idx = seen.indexOf(clipKey);
+      if (idx !== -1) setQueueProgress(idx, pct);
+    });
     try {
       const result = await Api.renderBatch(state.queue);
       const succeeded = result.results.filter(r => !r.error).length;
@@ -386,6 +401,7 @@ const EditorView = (() => {
     } catch (e) {
       showToast(`Batch render failed: ${e.message}`, true);
     } finally {
+      LogsView.onQueueProgress(null);
       btn.innerHTML = 'Render queue (<span id="queue-count">0</span>)';
       renderQueueUI();
     }

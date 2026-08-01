@@ -18,6 +18,7 @@ const Api = (() => {
   }
 
   return {
+    checkHealth: () => _request('/api/health'),
     listVideos: () => _request('/api/videos'),
     uploadVideos: (fileList) => {
       const form = new FormData();

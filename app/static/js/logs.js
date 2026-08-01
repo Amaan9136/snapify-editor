@@ -2,6 +2,8 @@ const LogsView = (() => {
   let source = null;
   let entries = [];
   let paused = false;
+  let clipKeys = [];
+  let queueProgressCb = null;
   const MAX_ENTRIES = 300;
 
   function init() {
@@ -27,6 +29,32 @@ const LogsView = (() => {
     };
   }
 
+  function onQueueProgress(cb) {
+    queueProgressCb = cb;
+    if (cb) clipKeys = [];
+  }
+
+  function seenClipKeys() {
+    return clipKeys;
+  }
+
+  function handleProgress(entry) {
+    if (!entry.clip_key) return;
+    if (!clipKeys.includes(entry.clip_key)) clipKeys.push(entry.clip_key);
+    if (entry.progress != null) {
+      const row = document.getElementById('editor-render-progress-row');
+      const fill = document.getElementById('editor-render-progress-fill');
+      const label = document.getElementById('editor-render-progress-label');
+      if (row && fill && label) {
+        row.classList.add('is-active');
+        fill.style.width = `${Math.round(entry.progress * 100)}%`;
+        fill.classList.toggle('is-done', entry.progress >= 1);
+        label.textContent = `${entry.clip_key} · ${Math.round(entry.progress * 100)}%`;
+      }
+      if (queueProgressCb) queueProgressCb(entry.clip_key, entry.progress);
+    }
+  }
+
   function setStatus(connected) {
     const dot = document.getElementById('logs-status-dot');
     if (dot) dot.dataset.ok = connected ? 'true' : 'false';
@@ -36,6 +64,7 @@ const LogsView = (() => {
     entries.push(entry);
     if (entries.length > MAX_ENTRIES) entries.shift();
     renderEntry(entry);
+    handleProgress(entry);
   }
 
   function renderEntry(entry) {
@@ -73,5 +102,5 @@ const LogsView = (() => {
     return div.innerHTML;
   }
 
-  return { init };
+  return { init, onQueueProgress, seenClipKeys };
 })();

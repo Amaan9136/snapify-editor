@@ -38,6 +38,40 @@ def _run(cmd, timeout=None):
             cmd=cmd,
         )
     return result
+def _run_with_progress(cmd, total_duration, timeout=None, on_progress=None):
+    progress_cmd = cmd[:1] + ["-progress", "pipe:1", "-nostats"] + cmd[1:]
+    try:
+        proc = subprocess.Popen(
+            progress_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except FileNotFoundError as e:
+        raise FFmpegError(f"Binary not found: {cmd[0]}. Is ffmpeg/ffprobe installed and on PATH?") from e
+    out_time = 0.0
+    for line in proc.stdout:
+        if line.startswith("out_time_ms="):
+            try:
+                out_time = int(line.strip().split("=", 1)[1]) / 1_000_000
+            except ValueError:
+                continue
+            if on_progress and total_duration > 0:
+                on_progress(min(1.0, out_time / total_duration))
+        elif line.startswith("progress=") and line.strip() == "progress=end" and on_progress:
+            on_progress(1.0)
+    stderr_text = proc.stderr.read()
+    try:
+        proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired as e:
+        proc.kill()
+        raise FFmpegError(f"Command timed out after {timeout}s: {' '.join(shlex.quote(c) for c in cmd)}") from e
+    if proc.returncode != 0:
+        raise FFmpegError(
+            f"Command failed (exit {proc.returncode}): {' '.join(shlex.quote(c) for c in cmd)}",
+            stderr=stderr_text,
+            cmd=cmd,
+        )
 def probe(path):
     cmd = [
         FFPROBE_BIN,
@@ -201,8 +235,10 @@ def split_video_at_points(video_path, split_points, out_dir, base_name=None):
     return segments
 def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
                  volume=1.0, mute=False,
-                 speed=1.0, brightness=None, contrast=None, saturation=None, fit_pad=True):
+                 speed=1.0, brightness=None, contrast=None, saturation=None, fit_pad=True,
+                 on_log=None, on_progress=None):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    if on_log: on_log(f"Probing source metadata for {Path(video_path).name}")
     meta = probe(video_path)
     src_w, src_h = meta["width"], meta["height"]
     vfilters = []
@@ -224,6 +260,7 @@ def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
         eq_parts.append(f"saturation={saturation}")
     if eq_parts:
         vfilters.append("eq=" + ":".join(eq_parts))
+    if on_log: on_log(f"Built filter chain: {', '.join(vfilters)}")
     cmd = [FFMPEG_BIN, "-y", "-ss", str(start), "-to", str(end), "-i", str(video_path)]
     cmd += ["-vf", ",".join(vfilters)]
     if mute or not meta["has_audio"]:
@@ -254,7 +291,9 @@ def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
         "-movflags", "+faststart",
         str(out_path),
     ]
-    _run(cmd, timeout=1800)
+    if on_log: on_log(f"Encoding {out_w}x{out_h} clip ({end-start:.2f}s) with libx264")
+    _run_with_progress(cmd, end - start, timeout=1800, on_progress=on_progress)
+    if on_log: on_log(f"Encode finished, verifying output {Path(out_path).name}")
     out_meta = probe(out_path)
     return {"path": out_path, "width": out_w, "height": out_h, "duration": out_meta["duration"]}
 def list_video_files(folder):

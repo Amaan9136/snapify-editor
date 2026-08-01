@@ -40,6 +40,17 @@ function debounce(fn, wait) {
   };
 }
 
+async function checkStatus() {
+  try {
+    const health = await Api.checkHealth();
+    document.querySelectorAll('#status-strip .status-dot[data-service]').forEach(dot => {
+      const svc = dot.dataset.service;
+      dot.dataset.ok = health[svc] && health[svc].ok ? 'true' : 'false';
+      if (health[svc] && health[svc].message) dot.title = health[svc].message;
+    });
+  } catch (e) {}
+}
+
 function switchView(viewName) {
   document.querySelectorAll('[data-view-panel]').forEach(panel => {
     panel.classList.toggle('hidden', panel.id !== `view-${viewName}`);
@@ -62,4 +73,5 @@ document.addEventListener('DOMContentLoaded', () => {
   PublishView.init();
   LogsView.init();
   LibraryView.refresh();
+  checkStatus();
 });
