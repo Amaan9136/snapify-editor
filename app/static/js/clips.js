@@ -25,7 +25,6 @@ const ClipsView = (() => {
     grid.innerHTML = clips.map(c => `
       <div class="clip-card" data-clip-id="${c._id}">
         <video src="${c.preview_url}" muted preload="metadata"></video>
-        <button class="video-card-delete" data-action="delete" title="Delete">&times;</button>
         <div class="clip-card-body">
           <span class="clip-card-status" data-status="${c.status}">${statusLabel(c.status)}</span>
           <p class="clip-card-title">${escapeHtml(c.title || c.filename)}</p>
@@ -35,6 +34,7 @@ const ClipsView = (() => {
               ${c.status === 'rendered' ? 'Push to Cloudinary' : (c.cloudinary_url ? 'On Cloudinary ✓' : '')}
             </button>
             <button class="btn btn-primary btn-sm" data-action="publish">Publish to YouTube</button>
+            <button class="btn btn-danger btn-sm" data-action="delete">Delete</button>
           </div>
         </div>
       </div>

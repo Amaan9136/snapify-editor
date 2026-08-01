@@ -8,6 +8,8 @@ _lock_counter = itertools.count()
 MAX_QUEUE_SIZE = 500
 class SSEHandler(logging.Handler):
     def emit(self, record):
+        if record.name == "werkzeug":
+            return
         try:
             message = self.format(record)
         except Exception:

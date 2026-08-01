@@ -2,7 +2,7 @@ const EditorView = (() => {
   let state = null;
 
   function freshState() {
-    return { filename: null, meta: null, trimStart: 0, trimEnd: 0, splitPoints: [], ratio: '9:16', customRatio: { w: 21, h: 9 }, fitPad: true, panStart: { x: 0.5, y: 0.5 }, panEnd: null, settingPanTarget: 'start', speed: 1.0, brightness: 0.0, contrast: 1.0, saturation: 1.0, mute: false, volume: 1.0, title: '', queue: [], };
+    return { filename: null, meta: null, trimStart: 0, trimEnd: 0, splitPoints: [], ratio: '9:16', customRatio: { w: 21, h: 9 }, fitPad: true, speed: 1.0, brightness: 0.0, contrast: 1.0, saturation: 1.0, mute: false, volume: 1.0, title: '', queue: [], };
   }
 
   function init() {
@@ -28,19 +28,6 @@ const EditorView = (() => {
     document.getElementById('trim-end-field').addEventListener('change', onTrimFieldChange);
     document.getElementById('btn-add-split').addEventListener('click', addSplitAtPlayhead);
     document.getElementById('btn-run-split').addEventListener('click', runSplit);
-
-    document.getElementById('btn-set-pan-start').addEventListener('click', () => { state.settingPanTarget = 'start'; showToast('Drag the crop box to set the pan START position.'); });
-    document.getElementById('btn-set-pan-end').addEventListener('click', () => {
-      if (!state.panEnd) state.panEnd = { ...state.panStart };
-      state.settingPanTarget = 'end';
-      showToast('Drag the crop box to set the pan END position.');
-    });
-    document.getElementById('btn-clear-pan').addEventListener('click', () => {
-      state.panEnd = null;
-      state.settingPanTarget = 'start';
-      updateViewfinder();
-      showToast('Pan cleared - crop is now static.');
-    });
 
     bindSlider('speed-slider', 'speed-value', (v) => { state.speed = v; return `${v.toFixed(2)}x`; }, applyPlaybackRate);
     bindSlider('brightness-slider', 'brightness-value', (v) => { state.brightness = v; return v.toFixed(2); }, applyCssFilterPreview);
@@ -135,7 +122,6 @@ const EditorView = (() => {
   }
 
   function onVideoLoadedMetadata() {
-    updateViewfinder();
     updateTimecodeDisplay();
   }
 
@@ -148,7 +134,6 @@ const EditorView = (() => {
       playhead.style.left = `${pct}%`;
     }
     updateTimecodeDisplay();
-    updateViewfinderPan();
     if (!video.paused && video.currentTime >= state.trimEnd) {
       video.currentTime = state.trimStart;
     }
@@ -206,7 +191,6 @@ const EditorView = (() => {
     } else {
       document.getElementById('preview-frame').style.aspectRatio = '';
     }
-    updateViewfinder();
   }
 
   function onCustomRatioChange() {
@@ -215,117 +199,10 @@ const EditorView = (() => {
     state.customRatio = { w, h };
     if (state.ratio === 'custom') {
       document.getElementById('preview-frame').style.aspectRatio = `${w} / ${h}`;
-      updateViewfinder();
-    }
-  }
-
-  function getTargetRatioValue() {
-    if (state.ratio === 'custom') return state.customRatio.w / state.customRatio.h;
-    const [w, h] = state.ratio.split(':').map(Number);
-    return w / h;
-  }
-
-  function computeCropRect(cx, cy) {
-    const { width: srcW, height: srcH } = state.meta;
-    const targetRatio = getTargetRatioValue();
-    const srcRatio = srcW / srcH;
-
-    let cropW, cropH;
-    if (srcRatio > targetRatio) {
-      cropH = srcH;
-      cropW = Math.round(cropH * targetRatio);
-    } else {
-      cropW = srcW;
-      cropH = Math.round(cropW / targetRatio);
-    }
-    cropW -= cropW % 2;
-    cropH -= cropH % 2;
-
-    const maxX = Math.max(srcW - cropW, 0);
-    const maxY = Math.max(srcH - cropH, 0);
-    const x = Math.round(Math.max(0, Math.min(1, cx)) * maxX);
-    const y = Math.round(Math.max(0, Math.min(1, cy)) * maxY);
-
-    return { cropW, cropH, x, y, srcW, srcH };
-  }
-
-  function updateViewfinderPan() {
-    if (!state.meta) return;
-    const video = document.getElementById('preview-video');
-    let progress = 0;
-    const trimDur = state.trimEnd - state.trimStart;
-    if (state.panEnd && trimDur > 0) {
-      progress = Math.min(1, Math.max(0, (video.currentTime - state.trimStart) / trimDur));
-    }
-    const cx = state.panEnd ? state.panStart.x + (state.panEnd.x - state.panStart.x) * progress : state.panStart.x;
-    const cy = state.panEnd ? state.panStart.y + (state.panEnd.y - state.panStart.y) * progress : state.panStart.y;
-    renderCropToDom(cx, cy);
-  }
-
-  function updateViewfinder() {
-    if (!state.meta) return;
-    updateViewfinderPan();
-  }
-
-  function renderCropToDom(cx, cy) {
-    const frame = document.getElementById('preview-frame');
-    const video = document.getElementById('preview-video');
-    const cropBox = document.getElementById('viewfinder-crop');
-    const { cropW, cropH, x, y, srcW, srcH } = computeCropRect(cx, cy);
-
-    const frameRect = frame.getBoundingClientRect();
-    const frameW = frameRect.width || 1;
-    const frameH = frameRect.height || 1;
-
-    const scale = frameW / cropW;
-    const scaledVideoW = srcW * scale;
-    const scaledVideoH = srcH * scale;
-    const offsetX = -x * scale;
-    const offsetY = -y * scale;
-
-    video.style.width = `${scaledVideoW}px`;
-    video.style.height = `${scaledVideoH}px`;
-    video.style.left = `${offsetX}px`;
-    video.style.top = `${offsetY}px`;
-
-    cropBox.style.left = '0px';
-    cropBox.style.top = '0px';
-    cropBox.style.width = `${frameW}px`;
-    cropBox.style.height = `${frameH}px`;
-  }
-
-  function setupCropDrag() {
-    const cropBox = document.getElementById('viewfinder-crop');
-    const frame = document.getElementById('preview-frame');
-    let dragging = false;
-
-    cropBox.addEventListener('pointerdown', (e) => {
-      if (!state.meta) return;
-      dragging = true;
-      cropBox.setPointerCapture(e.pointerId);
-      handleDragMove(e);
-    });
-    cropBox.addEventListener('pointermove', (e) => { if (dragging) handleDragMove(e); });
-    cropBox.addEventListener('pointerup', () => { dragging = false; });
-    cropBox.addEventListener('pointercancel', () => { dragging = false; });
-
-    function handleDragMove(e) {
-      const rect = frame.getBoundingClientRect();
-      const cx = (e.clientX - rect.left) / rect.width;
-      const cy = (e.clientY - rect.top) / rect.height;
-      const clamped = { x: Math.min(1, Math.max(0, cx)), y: Math.min(1, Math.max(0, cy)) };
-
-      if (state.settingPanTarget === 'end' && state.panEnd) {
-        state.panEnd = clamped;
-      } else {
-        state.panStart = clamped;
-      }
-      updateViewfinderPan();
     }
   }
 
   function setupTimelineDrag() {
-    setupCropDrag();
     const track = document.getElementById('timeline-track');
     const startHandle = document.getElementById('handle-start');
     const endHandle = document.getElementById('handle-end');
@@ -454,8 +331,6 @@ const EditorView = (() => {
       ratio: state.ratio,
       custom_ratio: state.ratio === 'custom' ? state.customRatio : null,
       fit_pad: state.fitPad,
-      pan_start: state.panStart,
-      pan_end: state.panEnd,
       speed: state.speed,
       brightness: state.brightness,
       contrast: state.contrast,
@@ -507,12 +382,12 @@ const EditorView = (() => {
       showToast(`Rendered ${succeeded}/${result.results.length} clip(s).${failed.length ? ' Some failed - check console.' : ''}`);
       if (failed.length) console.error('Render failures:', failed);
       state.queue = [];
-      renderQueueUI();
       switchView('clips');
     } catch (e) {
       showToast(`Batch render failed: ${e.message}`, true);
     } finally {
       btn.innerHTML = 'Render queue (<span id="queue-count">0</span>)';
+      renderQueueUI();
     }
   }
 
@@ -521,8 +396,6 @@ const EditorView = (() => {
     div.textContent = str;
     return div.innerHTML;
   }
-
-  window.addEventListener('resize', debounce(() => { if (state && state.meta) updateViewfinder(); }, 150));
 
   return { init, loadSource, populateSourceOptions };
 })();

@@ -21,6 +21,8 @@
 .btn-secondary:disabled { background: transparent; color: #63696f; border-color: #2a2f36; cursor: not-allowed; }
 .btn-ghost { background: transparent; border-color: #2a2f36; color: #9aa1ab; }
 .btn-ghost:hover { color: #eef0f2; border-color: #63696f; }
+.btn-danger { background: transparent; border-color: #2a2f36; color: #ef4444; }
+.btn-danger:hover { background: rgba(239,68,68,0.1); border-color: #ef4444; }
 
 .dropzone.is-dragover { border-color: #ff7a1a; background: rgba(255,122,26,0.1); color: #9aa1ab; }
 
@@ -39,7 +41,7 @@
 .preview-frame[data-ratio="4:5"]  { aspect-ratio: 4/5; max-width: 460px; }
 .preview-frame[data-ratio="1:1"]  { aspect-ratio: 1/1; max-width: 460px; }
 .preview-frame[data-ratio="4:3"]  { aspect-ratio: 4/3; max-width: 520px; }
-#preview-video { position: absolute; }
+#preview-video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
 .preview-empty-state.is-hidden { display: none; }
 
 .viewfinder { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
@@ -48,8 +50,6 @@
 .viewfinder-corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
 .viewfinder-corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
 .viewfinder-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
-.viewfinder-crop { position: absolute; border: 1px dashed rgba(255,122,26,0.55); pointer-events: auto; cursor: grab; }
-.viewfinder-crop:active { cursor: grabbing; }
 
 .ratio-btn { background: transparent; border: none; color: #9aa1ab; font-size: 12px; font-family: 'IBM Plex Mono', monospace; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
 .ratio-btn.is-active { background: #ff7a1a; color: #1a0e04; font-weight: 600; }
@@ -91,6 +91,7 @@
 input[type="range"] { accent-color: #ff7a1a; }
 
 .logs-list { background: #0e1013; border: 1px solid #2a2f36; border-radius: 12px; padding: 6px; height: calc(100vh - 260px); min-height: 320px; overflow-y: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.logs-list.logs-list-embedded { height: 220px; min-height: 220px; }
 .log-row { display: grid; grid-template-columns: 84px 90px 1fr; gap: 10px; padding: 5px 8px; border-radius: 6px; align-items: baseline; }
 .log-row:hover { background: #14171b; }
 .log-row-time { color: #63696f; }

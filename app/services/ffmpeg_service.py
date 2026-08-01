@@ -136,26 +136,11 @@ def _target_dims_for_ratio(src_w, src_h, ratio_key, custom_ratio=None):
     crop_w -= crop_w % 2
     crop_h -= crop_h % 2
     return crop_w, crop_h
-def build_crop_pan_filter(src_w, src_h, ratio_key, custom_ratio=None,
-                           pan_start=None, pan_end=None, duration=None):
+def build_crop_filter(src_w, src_h, ratio_key, custom_ratio=None):
     crop_w, crop_h = _target_dims_for_ratio(src_w, src_h, ratio_key, custom_ratio)
-    max_x = max(src_w - crop_w, 0)
-    max_y = max(src_h - crop_h, 0)
-    if pan_start is None:
-        pan_start = {"x": 0.5, "y": 0.5}
-    if pan_end is None:
-        pan_end = pan_start
-    x0 = int(round(max(0, min(1, pan_start.get("x", 0.5))) * max_x))
-    y0 = int(round(max(0, min(1, pan_start.get("y", 0.5))) * max_y))
-    x1 = int(round(max(0, min(1, pan_end.get("x", 0.5))) * max_x))
-    y1 = int(round(max(0, min(1, pan_end.get("y", 0.5))) * max_y))
-    if (x0, y0) == (x1, y1) or not duration or duration <= 0:
-        filter_str = f"crop={crop_w}:{crop_h}:{x0}:{y0}"
-    else:
-        expr_progress = f"min(t/{duration},1)"
-        x_expr = f"{x0}+({x1}-{x0})*{expr_progress}"
-        y_expr = f"{y0}+({y1}-{y0})*{expr_progress}"
-        filter_str = f"crop={crop_w}:{crop_h}:x='{x_expr}':y='{y_expr}'"
+    x = (src_w - crop_w) // 2
+    y = (src_h - crop_h) // 2
+    filter_str = f"crop={crop_w}:{crop_h}:{x}:{y}"
     return filter_str, crop_w, crop_h
 def build_pad_to_916_filter(crop_w, crop_h):
     canvas_w, canvas_h = 1080, 1920
@@ -169,7 +154,7 @@ def build_pad_to_916_filter(crop_w, crop_h):
     filter_str = f"scale={scaled_w}:{scaled_h},pad={canvas_w}:{canvas_h}:{x_offset}:{y_offset}:color=black"
     return filter_str, canvas_w, canvas_h
 def trim_clip(video_path, out_path, start, end, ratio_key=None, custom_ratio=None,
-              pan_start=None, pan_end=None, src_dims=None, reencode_audio=True):
+              src_dims=None, reencode_audio=True):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     duration = max(0.0, end - start)
     if duration <= 0:
@@ -180,8 +165,8 @@ def trim_clip(video_path, out_path, start, end, ratio_key=None, custom_ratio=Non
             meta = probe(video_path)
             src_dims = (meta["width"], meta["height"])
         src_w, src_h = src_dims
-        crop_filter, out_w, out_h = build_crop_pan_filter(
-            src_w, src_h, ratio_key, custom_ratio, pan_start, pan_end, duration
+        crop_filter, out_w, out_h = build_crop_filter(
+            src_w, src_h, ratio_key, custom_ratio
         )
         filters.append(crop_filter)
     cmd = [FFMPEG_BIN, "-y", "-ss", str(start), "-to", str(end), "-i", str(video_path)]
@@ -215,14 +200,14 @@ def split_video_at_points(video_path, split_points, out_dir, base_name=None):
         segments.append({"path": seg_path, "start": start, "end": end, "index": i + 1})
     return segments
 def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
-                 pan_start=None, pan_end=None, volume=1.0, mute=False,
+                 volume=1.0, mute=False,
                  speed=1.0, brightness=None, contrast=None, saturation=None, fit_pad=True):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     meta = probe(video_path)
     src_w, src_h = meta["width"], meta["height"]
     vfilters = []
-    crop_filter, out_w, out_h = build_crop_pan_filter(
-        src_w, src_h, ratio_key, custom_ratio, pan_start, pan_end, max(0.0, end - start)
+    crop_filter, out_w, out_h = build_crop_filter(
+        src_w, src_h, ratio_key, custom_ratio
     )
     vfilters.append(crop_filter)
     if fit_pad and ratio_key != "9:16":

@@ -1,4 +1,4 @@
-  <section class="px-8 py-7 pb-16 flex-1 hidden" id="view-editor" data-view-panel>
+<section class="px-8 py-7 pb-16 flex-1 hidden" id="view-editor" data-view-panel>
     <div class="grid grid-cols-[minmax(0,1.15fr)_380px] items-start gap-7 max-[980px]:grid-cols-1">
       <div>
         <div class="sticky top-5 max-[980px]:static">
@@ -9,7 +9,6 @@
               <div class="viewfinder-corner tr"></div>
               <div class="viewfinder-corner bl"></div>
               <div class="viewfinder-corner br"></div>
-              <div class="viewfinder-crop" id="viewfinder-crop"></div>
             </div>
             <div class="preview-empty-state absolute inset-0 flex items-center justify-center text-center p-6 text-ink-3 text-[13px] bg-inset z-[2]" id="preview-empty-state">
               <p>Select a video from the Library to start editing.</p>
@@ -70,16 +69,7 @@
           <button class="btn btn-secondary w-full" id="btn-run-split" disabled>Split at markers</button>
         </div>
         <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
-          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">3</span>Pan (Ken Burns)</h2>
-          <p class="text-xs text-ink-3 leading-relaxed -mt-1 mb-3">Drag the crop box on the preview to set the <b>start</b> position, then click "Set end position" and drag again. The crop will glide between them.</p>
-          <div class="flex gap-1.5 flex-wrap">
-            <button class="btn btn-ghost btn-sm" id="btn-set-pan-start">Set start position</button>
-            <button class="btn btn-ghost btn-sm" id="btn-set-pan-end">Set end position</button>
-            <button class="btn btn-ghost btn-sm" id="btn-clear-pan">Clear pan</button>
-          </div>
-        </div>
-        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
-          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">4</span>Adjustments</h2>
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">3</span>Adjustments</h2>
           <div class="mb-3">
             <label class="flex justify-between text-xs text-ink-2 mb-1.5">Speed <span id="speed-value" class="font-mono text-grade-teal">1.0x</span></label>
             <input type="range" id="speed-slider" min="0.25" max="3" step="0.05" value="1" class="w-full">
@@ -103,14 +93,26 @@
           </div>
         </div>
         <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
-          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">5</span>Clip title</h2>
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">4</span>Clip title</h2>
           <input type="text" id="clip-title-field" class="w-full bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display" placeholder="e.g. Best moment #1">
         </div>
         <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
-          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">6</span>Render queue</h2>
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">5</span>Render queue</h2>
           <button class="btn btn-ghost w-full" id="btn-add-to-queue">+ Add this clip to render queue</button>
           <div id="render-queue-list" class="my-2.5 flex flex-col gap-1.5"></div>
           <button class="btn btn-primary w-full" id="btn-render-queue" disabled>Render queue (<span id="queue-count">0</span>)</button>
+        </div>
+        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xs uppercase tracking-wider text-ink-2 font-semibold flex items-center gap-2 mb-0">Live logs <span class="status-dot" id="logs-status-dot" data-service="logs" title="Log stream"></span></h2>
+            <div class="flex gap-2">
+              <button class="btn btn-ghost btn-sm" id="btn-pause-logs">Pause</button>
+              <button class="btn btn-ghost btn-sm" id="btn-clear-logs">Clear</button>
+            </div>
+          </div>
+          <div id="logs-list" class="logs-list logs-list-embedded">
+            <p class="empty-hint">No logs yet.</p>
+          </div>
         </div>
       </div>
     </div>

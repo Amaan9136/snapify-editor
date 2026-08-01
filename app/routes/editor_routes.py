@@ -54,8 +54,6 @@ def _parse_render_params(body):
     end = float(body.get("end", 0))
     ratio_key = body.get("ratio", "9:16")
     custom_ratio = body.get("custom_ratio")
-    pan_start = body.get("pan_start")
-    pan_end = body.get("pan_end")
     volume = float(body.get("volume", 1.0))
     mute = bool(body.get("mute", False))
     speed = float(body.get("speed", 1.0))
@@ -67,7 +65,7 @@ def _parse_render_params(body):
     custom_tuple = (custom_ratio["w"], custom_ratio["h"]) if custom_ratio else None
     return dict(
         filename=filename, start=start, end=end, ratio_key=ratio_key, custom_ratio=custom_tuple,
-        pan_start=pan_start, pan_end=pan_end, volume=volume, mute=mute, speed=speed,
+        volume=volume, mute=mute, speed=speed,
         brightness=brightness, contrast=contrast, saturation=saturation, title=title, fit_pad=fit_pad,
     )
 def _render_one(params):
@@ -83,7 +81,6 @@ def _render_one(params):
         path, out_path,
         start=params["start"], end=params["end"],
         ratio_key=params["ratio_key"], custom_ratio=params["custom_ratio"],
-        pan_start=params["pan_start"], pan_end=params["pan_end"],
         volume=params["volume"], mute=params["mute"], speed=params["speed"],
         brightness=params["brightness"], contrast=params["contrast"], saturation=params["saturation"],
         fit_pad=params["fit_pad"],
