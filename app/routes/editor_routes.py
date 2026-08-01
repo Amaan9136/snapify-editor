@@ -40,7 +40,10 @@ def split_video():
         return err
     out_dir = Path(current_app.config["OUTPUTS_FOLDER"]) / "splits"
     try:
-        segments = ffmpeg_service.split_video_at_points(path, split_points, out_dir, base_name=Path(filename).stem)
+        segments = ffmpeg_service.split_video_at_points(
+            path, split_points, out_dir, base_name=Path(filename).stem,
+            on_log=lambda msg: log_service.log_frontend(msg, source="editor"),
+        )
     except FFmpegError as e:
         return jsonify({"error": str(e), "stderr": e.stderr}), 500
     for seg in segments:

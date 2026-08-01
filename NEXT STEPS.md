@@ -1,1 +1,0 @@
-1. improve ffmpeg to make the edits and other processing related thing quick and lightweight and also not consuming lot of cpu usage but should achieve same result. if this type of things i possible to achieve then make this happen. apart from the ffmpeg settings it can also use threads or parallel processing or multithreading if it helps to make this thing possible.

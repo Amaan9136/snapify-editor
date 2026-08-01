@@ -1,10 +1,13 @@
 import json
+import os
 import shlex
 import subprocess
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 FFMPEG_BIN = "ffmpeg"
 FFPROBE_BIN = "ffprobe"
+FFMPEG_THREADS = str(os.cpu_count() or 1)
 ASPECT_RATIOS = {
     "9:16": (9, 16),
     "16:9": (16, 9),
@@ -137,9 +140,10 @@ def generate_thumbnail(video_path, out_path, timestamp=1.0):
     ]
     _run(cmd, timeout=30)
     return out_path
-def generate_preview_proxy(video_path, out_path, max_height=480):
+def generate_preview_proxy(video_path, out_path, max_height=480, on_log=None):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     scale_filter = f"scale=-2:'min({max_height},ih)'"
+    if on_log: on_log(f"Preview proxy for {Path(video_path).name} using {FFMPEG_THREADS} cores")
     cmd = [
         FFMPEG_BIN, "-y",
         "-i", str(video_path),
@@ -147,6 +151,7 @@ def generate_preview_proxy(video_path, out_path, max_height=480):
         "-c:v", "libx264",
         "-preset", "veryfast",
         "-crf", "28",
+        "-threads", FFMPEG_THREADS,
         "-c:a", "aac",
         "-b:a", "96k",
         "-movflags", "+faststart",
@@ -188,7 +193,7 @@ def build_pad_to_916_filter(crop_w, crop_h):
     filter_str = f"scale={scaled_w}:{scaled_h},pad={canvas_w}:{canvas_h}:{x_offset}:{y_offset}:color=black"
     return filter_str, canvas_w, canvas_h
 def trim_clip(video_path, out_path, start, end, ratio_key=None, custom_ratio=None,
-              src_dims=None, reencode_audio=True):
+              src_dims=None, reencode_audio=True, on_log=None):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     duration = max(0.0, end - start)
     if duration <= 0:
@@ -208,31 +213,45 @@ def trim_clip(video_path, out_path, start, end, ratio_key=None, custom_ratio=Non
         cmd += ["-vf", ",".join(filters)]
     cmd += [
         "-c:v", "libx264",
-        "-preset", "medium",
+        "-preset", "veryfast",
         "-crf", "20",
         "-pix_fmt", "yuv420p",
+        "-threads", FFMPEG_THREADS,
     ]
     if reencode_audio:
         cmd += ["-c:a", "aac", "-b:a", "192k"]
     else:
         cmd += ["-an"]
     cmd += ["-movflags", "+faststart", str(out_path)]
+    if on_log: on_log(f"Trimming {Path(out_path).name} ({start:.2f}s-{end:.2f}s) on {FFMPEG_THREADS} cores")
     _run(cmd, timeout=1800)
+    if on_log: on_log(f"Finished {Path(out_path).name}")
     return out_path
-def split_video_at_points(video_path, split_points, out_dir, base_name=None):
+def split_video_at_points(video_path, split_points, out_dir, base_name=None, on_log=None):
     meta = probe(video_path)
     duration = meta["duration"]
     base_name = base_name or Path(video_path).stem
     points = sorted(set([0.0] + [float(p) for p in split_points if 0 < p < duration] + [duration]))
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    segments = []
+    jobs = []
     for i in range(len(points) - 1):
         start, end = points[i], points[i + 1]
         seg_name = f"{base_name}_seg{i+1:02d}_{uuid.uuid4().hex[:6]}.mp4"
         seg_path = str(Path(out_dir) / seg_name)
+        jobs.append((seg_path, start, end, i + 1))
+    total_cores = os.cpu_count() or 1
+    worker_count = min(len(jobs), total_cores) or 1
+    if on_log: on_log(f"Splitting into {len(jobs)} segment(s) across {worker_count} worker(s) ({total_cores} cores available)")
+    def _do_trim(job):
+        seg_path, start, end, index = job
+        worker_id = (index - 1) % worker_count
+        if on_log: on_log(f"Worker {worker_id} assigned segment {index}: {Path(seg_path).name} ({start:.2f}s-{end:.2f}s)")
         trim_clip(video_path, seg_path, start, end, src_dims=(meta["width"], meta["height"]))
-        segments.append({"path": seg_path, "start": start, "end": end, "index": i + 1})
-    return segments
+        if on_log: on_log(f"Worker {worker_id} finished segment {index}: {Path(seg_path).name}")
+        return {"path": seg_path, "start": start, "end": end, "index": index}
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        segments = list(executor.map(_do_trim, jobs))
+    return sorted(segments, key=lambda s: s["index"])
 def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
                  volume=1.0, mute=False,
                  speed=1.0, brightness=None, contrast=None, saturation=None, fit_pad=True,
@@ -285,13 +304,14 @@ def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
         cmd += ["-c:a", "aac", "-b:a", "192k"]
     cmd += [
         "-c:v", "libx264",
-        "-preset", "medium",
+        "-preset", "veryfast",
         "-crf", "19",
         "-pix_fmt", "yuv420p",
+        "-threads", FFMPEG_THREADS,
         "-movflags", "+faststart",
         str(out_path),
     ]
-    if on_log: on_log(f"Encoding {out_w}x{out_h} clip ({end-start:.2f}s) with libx264")
+    if on_log: on_log(f"Encoding {out_w}x{out_h} clip ({end-start:.2f}s) with libx264 using {FFMPEG_THREADS} cores")
     _run_with_progress(cmd, end - start, timeout=1800, on_progress=on_progress)
     if on_log: on_log(f"Encode finished, verifying output {Path(out_path).name}")
     out_meta = probe(out_path)

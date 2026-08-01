@@ -107,7 +107,10 @@ def proxy_video(filename):
     proxy_path = Path(cache_folder) / proxy_name
     if not proxy_path.exists():
         try:
-            ffmpeg_service.generate_preview_proxy(src_path, proxy_path)
+            ffmpeg_service.generate_preview_proxy(
+                src_path, proxy_path,
+                on_log=lambda msg: log_service.log_frontend(msg, source="video"),
+            )
         except FFmpegError as e:
             return jsonify({"error": str(e), "stderr": e.stderr}), 500
     return send_from_directory(cache_folder, proxy_name, conditional=True)
