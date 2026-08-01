@@ -102,18 +102,18 @@
           <div id="render-queue-list" class="my-2.5 flex flex-col gap-1.5"></div>
           <button class="btn btn-primary w-full" id="btn-render-queue" disabled>Render queue (<span id="queue-count">0</span>)</button>
         </div>
-        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
-          <div class="flex justify-between items-center mb-3">
-            <h2 class="text-xs uppercase tracking-wider text-ink-2 font-semibold flex items-center gap-2 mb-0">Live logs <span class="status-dot" id="logs-status-dot" data-service="logs" title="Log stream"></span></h2>
-            <div class="flex gap-2">
-              <button class="btn btn-ghost btn-sm" id="btn-pause-logs">Pause</button>
-              <button class="btn btn-ghost btn-sm" id="btn-clear-logs">Clear</button>
-            </div>
-          </div>
-          <div id="logs-list" class="logs-list logs-list-embedded">
-            <p class="empty-hint">No logs yet.</p>
-          </div>
+      </div>
+    </div>
+    <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-xs uppercase tracking-wider text-ink-2 font-semibold flex items-center gap-2 mb-0">Live logs <span class="status-dot" id="logs-status-dot" data-service="logs" title="Log stream"></span></h2>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost btn-sm" id="btn-pause-logs">Pause</button>
+          <button class="btn btn-ghost btn-sm" id="btn-clear-logs">Clear</button>
         </div>
+      </div>
+      <div id="logs-list" class="logs-list logs-list-embedded">
+        <p class="empty-hint">No logs yet.</p>
       </div>
     </div>
   </section>
