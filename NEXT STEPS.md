@@ -1,0 +1,10 @@
+1. Give option to delete the Rendered videos from the frontend backend and database, incl cloudinary if it was uploaded in the cloud.
+
+2. I want to use streaming of the logs where i want to use event stream to show in the frontend what is happening to log it into the frontend, it should log all the needed info related logs. it should also use services where create a service for that too, where one of the must function should be log_frontend. where whenever it runs it should print the  things from backend to the frontend. also in the frontend, i want to show those logs in good ui and ux, for both mobile and desktop based design for them
+
+3. when there is one or more in the queue for rendering it says
+Batch render failed: Cannot set properties of null (setting 'textContent')
+
+4. need a checkbox (default true) when sending to the rendering, where it should ask me if i want to render it in 9:16 format for the reels that i have send for 16:9 or 4:5 anything apart from the 9:16 for the rendering. where when its true, i want the 9:16 itself but it should have some change where the video should be rendered in the selected ration itself (16:9 or 4:5 or anything but the remaining space to fill the 9:16 should be black background where the video is only rendered for the selected ratio only) but video will be 9:16. it is to fill the gap. give proper small description which allows users to understand what checkbox is about. should be descriptive and understandable. good ui and ux. where if its false i want to do it normally as we are doing it now
+
+5. instead of keeping single index.html file, i want you to take the multiple html files and i want you to create them as components for the index which should be a helper for that where instead of writing all the things in the index.html, it should be properly split.. also these task should be done carefully without breaking any existing things until its absolutely needed.

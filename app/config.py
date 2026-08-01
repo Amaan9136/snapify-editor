@@ -1,15 +1,10 @@
 import os
 from pathlib import Path
-
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
 def _bool(val, default=False):
     if val is None:
         return default
     return str(val).strip().lower() in ("1", "true", "yes", "on")
-
-
 class Config:
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev-secret-key-change-me")
     DEBUG = _bool(os.getenv("FLASK_DEBUG"), True)
@@ -27,11 +22,9 @@ class Config:
     CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "")
     CLOUDINARY_BASE_FOLDER = os.getenv("CLOUDINARY_BASE_FOLDER", "snapify-editor")
     CLOUDINARY_VIDEOS_SUBFOLDER = os.getenv("CLOUDINARY_VIDEOS_SUBFOLDER", "videos")
-
     @property
     def CLOUDINARY_FULL_FOLDER(self):
         return f"{self.CLOUDINARY_BASE_FOLDER}/{self.CLOUDINARY_VIDEOS_SUBFOLDER}"
-
     OLLAMA_HOST = os.getenv("OLLAMA_HOST", "https://ollama.com")
     OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "")
     OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gpt-oss:20b-cloud")
@@ -43,7 +36,6 @@ class Config:
         "https://www.googleapis.com/auth/youtube.readonly",
     ]
     SCHEDULER_POLL_INTERVAL = int(os.getenv("SCHEDULER_POLL_INTERVAL", "60"))
-
     @classmethod
     def ensure_dirs(cls):
         for folder in (cls.VIDEOS_FOLDER, cls.OUTPUTS_FOLDER, cls.CACHE_FOLDER):

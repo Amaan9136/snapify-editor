@@ -1,11 +1,7 @@
 from flask import Blueprint, current_app, jsonify, request
-
 from app.services import ollama_service, db_service
 from app.services.ollama_service import OllamaError
-
 ollama_bp = Blueprint("ollama", __name__)
-
-
 @ollama_bp.route("/generate", methods=["POST"])
 def generate_metadata():
     body = request.get_json(force=True) or {}
@@ -32,8 +28,6 @@ def generate_metadata():
     )
     saved["_id"] = str(saved["_id"])
     return jsonify(saved)
-
-
 @ollama_bp.route("/status", methods=["GET"])
 def status():
     ok, message = ollama_service.check_connection(current_app.config)

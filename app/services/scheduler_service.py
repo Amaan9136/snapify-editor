@@ -1,14 +1,9 @@
 import logging
 import threading
-
 from app.services import db_service, youtube_service, cloudinary_service
-
 logger = logging.getLogger("snapify.scheduler")
-
 _stop_event = threading.Event()
 _thread = None
-
-
 def _process_job(app, job):
     job_id = str(job["_id"])
     db_service.update_upload_job(job_id, {"status": "uploading"})
@@ -43,8 +38,6 @@ def _process_job(app, job):
     except Exception as e:
         logger.exception("Upload job %s failed", job_id)
         db_service.update_upload_job(job_id, {"status": "failed", "error": str(e)})
-
-
 def _poll_loop(app):
     interval = app.config.get("SCHEDULER_POLL_INTERVAL", 60)
     logger.info("Scheduler thread started, polling every %ss", interval)
@@ -57,8 +50,6 @@ def _poll_loop(app):
         except Exception:
             logger.exception("Scheduler poll cycle failed")
         _stop_event.wait(interval)
-
-
 def start_scheduler(app):
     global _thread
     if _thread and _thread.is_alive():
@@ -66,7 +57,5 @@ def start_scheduler(app):
     _stop_event.clear()
     _thread = threading.Thread(target=_poll_loop, args=(app,), daemon=True, name="snapify-scheduler")
     _thread.start()
-
-
 def stop_scheduler():
     _stop_event.set()

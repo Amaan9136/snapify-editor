@@ -1,25 +1,16 @@
 import uuid
 from pathlib import Path
-
 from flask import Blueprint, current_app, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
-
-from app.services import ffmpeg_service, db_service
+from app.services import ffmpeg_service, db_service, log_service
 from app.services.ffmpeg_service import FFmpegError
-
 video_bp = Blueprint("video", __name__)
-
-
 def _allowed_file(filename):
     ext = Path(filename).suffix.lower()
     return ext in current_app.config["ALLOWED_VIDEO_EXTENSIONS"]
-
-
 def _thumbnail_path_for(filename):
     stem = Path(filename).stem
     return Path(current_app.config["CACHE_FOLDER"]) / f"{stem}_thumb.jpg"
-
-
 @video_bp.route("", methods=["GET"])
 def list_videos():
     videos_folder = current_app.config["VIDEOS_FOLDER"]
@@ -69,8 +60,6 @@ def list_videos():
             "thumbnail_url": f"/api/videos/thumbnail/{filename}",
         })
     return jsonify({"videos": results, "folder": videos_folder})
-
-
 @video_bp.route("/upload", methods=["POST"])
 def upload_videos():
     videos_folder = current_app.config["VIDEOS_FOLDER"]
@@ -92,15 +81,12 @@ def upload_videos():
             dest_path = Path(videos_folder) / filename
         f.save(str(dest_path))
         saved.append(filename)
+    log_service.log_frontend(f"Uploaded {len(saved)} video(s), skipped {len(skipped)}", source="video")
     return jsonify({"saved": saved, "skipped": skipped})
-
-
 @video_bp.route("/stream/<path:filename>", methods=["GET"])
 def stream_video(filename):
     videos_folder = current_app.config["VIDEOS_FOLDER"]
     return send_from_directory(videos_folder, filename, conditional=True)
-
-
 @video_bp.route("/thumbnail/<path:filename>", methods=["GET"])
 def thumbnail(filename):
     cache_folder = current_app.config["CACHE_FOLDER"]
@@ -109,8 +95,6 @@ def thumbnail(filename):
     if not (Path(cache_folder) / thumb_name).exists():
         return jsonify({"error": "Thumbnail not generated yet"}), 404
     return send_from_directory(cache_folder, thumb_name)
-
-
 @video_bp.route("/proxy/<path:filename>", methods=["GET"])
 def proxy_video(filename):
     videos_folder = current_app.config["VIDEOS_FOLDER"]
@@ -127,8 +111,6 @@ def proxy_video(filename):
         except FFmpegError as e:
             return jsonify({"error": str(e), "stderr": e.stderr}), 500
     return send_from_directory(cache_folder, proxy_name, conditional=True)
-
-
 @video_bp.route("/<path:filename>", methods=["DELETE"])
 def delete_video(filename):
     videos_folder = current_app.config["VIDEOS_FOLDER"]
@@ -144,4 +126,5 @@ def delete_video(filename):
         cached = cache_folder / f"{stem}{suffix}"
         if cached.exists():
             cached.unlink()
+    log_service.log_frontend(f"Deleted source video {safe_name}", source="video")
     return jsonify({"deleted": safe_name})

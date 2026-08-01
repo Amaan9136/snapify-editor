@@ -60,5 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
   EditorView.init();
   ClipsView.init();
   PublishView.init();
+  LogsView.init();
   LibraryView.refresh();
 });

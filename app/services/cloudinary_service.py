@@ -1,10 +1,7 @@
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-
 _configured = False
-
-
 def init_cloudinary(app):
     global _configured
     cloudinary.config(
@@ -14,12 +11,8 @@ def init_cloudinary(app):
         secure=True,
     )
     _configured = bool(app.config["CLOUDINARY_CLOUD_NAME"] and app.config["CLOUDINARY_API_KEY"])
-
-
 def is_configured():
     return _configured
-
-
 def upload_video(local_path, public_id=None, folder=None, app_config=None):
     if not _configured:
         raise RuntimeError(
@@ -38,8 +31,6 @@ def upload_video(local_path, public_id=None, folder=None, app_config=None):
         kwargs["public_id"] = public_id
     result = cloudinary.uploader.upload_large(local_path, **kwargs)
     return result
-
-
 def delete_video(public_id):
     if not _configured:
         raise RuntimeError("Cloudinary is not configured.")

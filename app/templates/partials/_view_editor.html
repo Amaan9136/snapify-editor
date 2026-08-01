@@ -1,0 +1,117 @@
+  <section class="px-8 py-7 pb-16 flex-1 hidden" id="view-editor" data-view-panel>
+    <div class="grid grid-cols-[minmax(0,1.15fr)_380px] items-start gap-7 max-[980px]:grid-cols-1">
+      <div>
+        <div class="sticky top-5 max-[980px]:static">
+          <div class="preview-frame relative w-full max-w-[420px] aspect-[9/16] mx-auto bg-inset rounded-2xl overflow-hidden border border-hairline flex items-center justify-center" id="preview-frame" data-ratio="9:16">
+            <video id="preview-video" playsinline muted></video>
+            <div class="viewfinder" id="viewfinder">
+              <div class="viewfinder-corner tl"></div>
+              <div class="viewfinder-corner tr"></div>
+              <div class="viewfinder-corner bl"></div>
+              <div class="viewfinder-corner br"></div>
+              <div class="viewfinder-crop" id="viewfinder-crop"></div>
+            </div>
+            <div class="preview-empty-state absolute inset-0 flex items-center justify-center text-center p-6 text-ink-3 text-[13px] bg-inset z-[2]" id="preview-empty-state">
+              <p>Select a video from the Library to start editing.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 mt-3.5 justify-center flex-wrap">
+            <button class="w-9 h-9 rounded-lg inline-flex items-center justify-center cursor-pointer bg-panel-raised border border-hairline text-ink-1 hover:border-grade-orange" id="btn-play-pause" title="Play/Pause">
+              <svg id="icon-play" width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.5L13 8L4 13.5V2.5Z"/></svg>
+              <svg id="icon-pause" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="hidden"><rect x="4" y="2.5" width="3" height="11"/><rect x="9" y="2.5" width="3" height="11"/></svg>
+            </button>
+            <span class="font-mono text-[12.5px] text-ink-2" id="timecode-display">00:00.00 / 00:00.00</span>
+            <div class="flex gap-1 bg-panel-raised rounded-lg p-0.5" id="ratio-picker">
+              <button data-ratio="9:16" class="ratio-btn is-active">9:16</button>
+              <button data-ratio="4:5" class="ratio-btn">4:5</button>
+              <button data-ratio="1:1" class="ratio-btn">1:1</button>
+              <button data-ratio="16:9" class="ratio-btn">16:9</button>
+              <button data-ratio="4:3" class="ratio-btn">4:3</button>
+              <button data-ratio="custom" class="ratio-btn">Custom</button>
+            </div>
+          </div>
+          <div class="text-center mt-2.5 text-xs text-ink-2 hidden" id="custom-ratio-row">
+            <label>Custom ratio <input type="number" id="custom-ratio-w" value="21" min="1" class="bg-inset border border-hairline text-ink-1 rounded px-1.5 py-0.5 font-mono text-center" style="width:56px"> : <input type="number" id="custom-ratio-h" value="9" min="1" class="bg-inset border border-hairline text-ink-1 rounded px-1.5 py-0.5 font-mono text-center" style="width:56px"></label>
+          </div>
+          <div class="mt-3 hidden" id="fit-pad-row">
+            <label class="flex items-start gap-2 text-[12.5px] text-ink-2">
+              <input type="checkbox" id="fit-pad-checkbox" class="accent-grade-orange mt-0.5" checked>
+              <span>Fit ratio inside 9:16 with black bars<br><span class="text-[11px] text-ink-3 leading-relaxed">Output stays 9:16, but your selected ratio is rendered at its own shape in the middle, with black filling the rest. Uncheck to crop straight to 9:16 as before.</span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">1</span>Source</h2>
+          <select id="source-select" class="w-full bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display">
+            <option value="">Choose a video&hellip;</option>
+          </select>
+        </div>
+        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xs uppercase tracking-wider text-ink-2 font-semibold flex items-center gap-2 mb-0"><span class="step-badge">2</span>Timeline &amp; split</h2>
+            <button class="btn btn-ghost btn-sm" id="btn-add-split">Add split marker</button>
+          </div>
+          <div class="mb-2.5">
+            <div class="timeline-track h-[46px] bg-inset rounded-lg border border-hairline cursor-pointer" id="timeline-track">
+              <div class="timeline-selection" id="timeline-selection"></div>
+              <div class="timeline-handle start" id="handle-start"></div>
+              <div class="timeline-handle end" id="handle-end"></div>
+              <div class="timeline-playhead" id="timeline-playhead"></div>
+              <div id="split-markers-layer"></div>
+            </div>
+          </div>
+          <div class="flex gap-2.5 mb-2.5">
+            <label class="flex-1 text-[11.5px] text-ink-2">Start <input type="text" id="trim-start-field" value="00:00.00" class="block w-full mt-1 bg-inset border border-hairline text-ink-1 font-mono text-[12.5px] rounded-md px-2 py-1.5"></label>
+            <label class="flex-1 text-[11.5px] text-ink-2">End <input type="text" id="trim-end-field" value="00:00.00" class="block w-full mt-1 bg-inset border border-hairline text-ink-1 font-mono text-[12.5px] rounded-md px-2 py-1.5"></label>
+          </div>
+          <div id="split-markers-list" class="flex flex-wrap gap-1.5 mb-2.5"></div>
+          <button class="btn btn-secondary w-full" id="btn-run-split" disabled>Split at markers</button>
+        </div>
+        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">3</span>Pan (Ken Burns)</h2>
+          <p class="text-xs text-ink-3 leading-relaxed -mt-1 mb-3">Drag the crop box on the preview to set the <b>start</b> position, then click "Set end position" and drag again. The crop will glide between them.</p>
+          <div class="flex gap-1.5 flex-wrap">
+            <button class="btn btn-ghost btn-sm" id="btn-set-pan-start">Set start position</button>
+            <button class="btn btn-ghost btn-sm" id="btn-set-pan-end">Set end position</button>
+            <button class="btn btn-ghost btn-sm" id="btn-clear-pan">Clear pan</button>
+          </div>
+        </div>
+        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">4</span>Adjustments</h2>
+          <div class="mb-3">
+            <label class="flex justify-between text-xs text-ink-2 mb-1.5">Speed <span id="speed-value" class="font-mono text-grade-teal">1.0x</span></label>
+            <input type="range" id="speed-slider" min="0.25" max="3" step="0.05" value="1" class="w-full">
+          </div>
+          <div class="mb-3">
+            <label class="flex justify-between text-xs text-ink-2 mb-1.5">Brightness <span id="brightness-value" class="font-mono text-grade-teal">0.0</span></label>
+            <input type="range" id="brightness-slider" min="-0.3" max="0.3" step="0.01" value="0" class="w-full">
+          </div>
+          <div class="mb-3">
+            <label class="flex justify-between text-xs text-ink-2 mb-1.5">Contrast <span id="contrast-value" class="font-mono text-grade-teal">1.0</span></label>
+            <input type="range" id="contrast-slider" min="0.5" max="2" step="0.01" value="1" class="w-full">
+          </div>
+          <div class="mb-3">
+            <label class="flex justify-between text-xs text-ink-2 mb-1.5">Saturation <span id="saturation-value" class="font-mono text-grade-teal">1.0</span></label>
+            <input type="range" id="saturation-slider" min="0" max="3" step="0.01" value="1" class="w-full">
+          </div>
+          <label class="flex items-center gap-2 text-[12.5px] text-ink-2 mb-2.5"><input type="checkbox" id="mute-checkbox" class="accent-grade-orange"> Mute audio</label>
+          <div class="mb-3" id="volume-row">
+            <label class="flex justify-between text-xs text-ink-2 mb-1.5">Volume <span id="volume-value" class="font-mono text-grade-teal">1.0</span></label>
+            <input type="range" id="volume-slider" min="0" max="2" step="0.05" value="1" class="w-full">
+          </div>
+        </div>
+        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">5</span>Clip title</h2>
+          <input type="text" id="clip-title-field" class="w-full bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display" placeholder="e.g. Best moment #1">
+        </div>
+        <div class="bg-panel border border-hairline rounded-2xl p-4 mb-3.5">
+          <h2 class="text-xs uppercase tracking-wider text-ink-2 mb-3 font-semibold flex items-center gap-2"><span class="step-badge">6</span>Render queue</h2>
+          <button class="btn btn-ghost w-full" id="btn-add-to-queue">+ Add this clip to render queue</button>
+          <div id="render-queue-list" class="my-2.5 flex flex-col gap-1.5"></div>
+          <button class="btn btn-primary w-full" id="btn-render-queue" disabled>Render queue (<span id="queue-count">0</span>)</button>
+        </div>
+      </div>
+    </div>
+  </section>

@@ -46,6 +46,7 @@ const Api = (() => {
       body: JSON.stringify({ clip_id: clipId }),
     }),
     listClips: () => _request('/api/editor/clips'),
+    deleteClip: (clipId) => _request(`/api/editor/clips/${encodeURIComponent(clipId)}`, { method: 'DELETE' }),
     generateCaption: (clipId, context, notes) => _request('/api/ollama/generate', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ clip_id: clipId, context, notes }),

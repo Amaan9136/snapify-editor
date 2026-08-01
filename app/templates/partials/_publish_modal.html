@@ -1,0 +1,45 @@
+<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] hidden" id="publish-modal-backdrop">
+  <div class="bg-panel border border-hairline rounded-2xl w-[480px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-48px)] flex flex-col shadow-[0_8px_24px_rgba(0,0,0,0.35)]" id="publish-modal">
+    <div class="flex justify-between items-center px-5 py-4 border-b border-hairline">
+      <h2 class="text-[15px] m-0 font-semibold">Publish to YouTube</h2>
+      <button class="w-9 h-9 rounded-lg inline-flex items-center justify-center cursor-pointer bg-panel-raised border border-hairline text-ink-1 hover:border-grade-orange" id="btn-close-publish-modal">&times;</button>
+    </div>
+    <div class="px-5 py-4.5 overflow-y-auto">
+      <video id="publish-modal-preview" controls class="w-full max-h-[220px] rounded-lg bg-black mb-3.5"></video>
+      <div class="mb-3 flex items-center gap-2.5">
+        <button class="btn btn-ghost btn-sm" id="btn-generate-caption">✨ Generate title/description/hashtags with Ollama</button>
+      </div>
+      <label class="block text-xs text-ink-2 mb-3">Title
+        <input type="text" id="publish-title-field" class="w-full bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display mt-1.5">
+      </label>
+      <label class="block text-xs text-ink-2 mb-3">Description
+        <textarea id="publish-description-field" class="w-full bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display resize-y mt-1.5" rows="4"></textarea>
+      </label>
+      <label class="block text-xs text-ink-2 mb-3">Hashtags
+        <input type="text" id="publish-hashtags-field" class="w-full bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display mt-1.5" placeholder="#shorts #reels ...">
+      </label>
+      <div class="mb-3 flex items-center gap-2.5">
+        <label>Privacy
+          <select id="publish-privacy-field" class="w-auto bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display">
+            <option value="private">Private</option>
+            <option value="unlisted">Unlisted</option>
+            <option value="public">Public</option>
+          </select>
+        </label>
+      </div>
+      <div class="publish-mode-toggle flex gap-1.5 mb-3">
+        <button class="toggle-btn is-active" data-mode="now">Publish now</button>
+        <button class="toggle-btn" data-mode="schedule">Schedule for later</button>
+      </div>
+      <div class="mb-3 flex items-center gap-2.5 hidden" id="schedule-datetime-row">
+        <label>Date &amp; time
+          <input type="datetime-local" id="schedule-datetime-field" class="w-full bg-inset border border-hairline text-ink-1 rounded-lg px-2.5 py-2 text-[13px] font-display">
+        </label>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 px-5 py-3.5 border-t border-hairline">
+      <button class="btn btn-ghost" id="btn-cancel-publish">Cancel</button>
+      <button class="btn btn-primary" id="btn-confirm-publish">Publish</button>
+    </div>
+  </div>
+</div>

@@ -1,25 +1,16 @@
 import uuid
 from pathlib import Path
-
 from flask import Blueprint, current_app, jsonify, request, send_from_directory
-
-from app.services import ffmpeg_service, db_service, cloudinary_service
+from app.services import ffmpeg_service, db_service, cloudinary_service, log_service
 from app.services.ffmpeg_service import FFmpegError
-
 editor_bp = Blueprint("editor", __name__)
-
-
 def _source_path(filename):
     return Path(current_app.config["VIDEOS_FOLDER"]) / filename
-
-
 def _validate_source(filename):
     path = _source_path(filename)
     if not path.exists():
         return None, (jsonify({"error": f"Source video '{filename}' not found in local /videos folder"}), 404)
     return path, None
-
-
 @editor_bp.route("/probe", methods=["POST"])
 def probe_video():
     body = request.get_json(force=True) or {}
@@ -35,8 +26,6 @@ def probe_video():
         return jsonify({"error": str(e), "stderr": e.stderr}), 500
     meta["aspect_ratios_available"] = list(ffmpeg_service.ASPECT_RATIOS.keys()) + ["custom"]
     return jsonify(meta)
-
-
 @editor_bp.route("/split", methods=["POST"])
 def split_video():
     body = request.get_json(force=True) or {}
@@ -59,8 +48,6 @@ def split_video():
         seg["preview_url"] = f"/api/editor/output/splits/{seg['filename']}"
         del seg["path"]
     return jsonify({"source": filename, "segments": segments})
-
-
 def _parse_render_params(body):
     filename = body.get("filename")
     start = float(body.get("start", 0))
@@ -76,14 +63,13 @@ def _parse_render_params(body):
     contrast = body.get("contrast")
     saturation = body.get("saturation")
     title = body.get("title", "")
+    fit_pad = bool(body.get("fit_pad", True))
     custom_tuple = (custom_ratio["w"], custom_ratio["h"]) if custom_ratio else None
     return dict(
         filename=filename, start=start, end=end, ratio_key=ratio_key, custom_ratio=custom_tuple,
         pan_start=pan_start, pan_end=pan_end, volume=volume, mute=mute, speed=speed,
-        brightness=brightness, contrast=contrast, saturation=saturation, title=title,
+        brightness=brightness, contrast=contrast, saturation=saturation, title=title, fit_pad=fit_pad,
     )
-
-
 def _render_one(params):
     filename = params["filename"]
     path, err = _validate_source(filename)
@@ -92,6 +78,7 @@ def _render_one(params):
     out_name = f"{Path(filename).stem}_{params['ratio_key'].replace(':', 'x')}_{uuid.uuid4().hex[:8]}.mp4"
     out_dir = Path(current_app.config["OUTPUTS_FOLDER"]) / "renders"
     out_path = out_dir / out_name
+    log_service.log_frontend(f"Rendering {filename} -> {out_name} ({params['ratio_key']})", source="editor")
     render_result = ffmpeg_service.render_reel(
         path, out_path,
         start=params["start"], end=params["end"],
@@ -99,6 +86,7 @@ def _render_one(params):
         pan_start=params["pan_start"], pan_end=params["pan_end"],
         volume=params["volume"], mute=params["mute"], speed=params["speed"],
         brightness=params["brightness"], contrast=params["contrast"], saturation=params["saturation"],
+        fit_pad=params["fit_pad"],
     )
     clip_id = None
     try:
@@ -112,6 +100,7 @@ def _render_one(params):
             "start": params["start"],
             "end": params["end"],
             "ratio": params["ratio_key"],
+            "fit_pad": params["fit_pad"],
             "width": render_result["width"],
             "height": render_result["height"],
             "duration": render_result["duration"],
@@ -120,6 +109,7 @@ def _render_one(params):
         clip_id = str(clip_doc["_id"])
     except Exception:
         pass
+    log_service.log_frontend(f"Render complete: {out_name}", source="editor")
     return {
         "clip_id": clip_id,
         "filename": out_name,
@@ -128,8 +118,6 @@ def _render_one(params):
         "height": render_result["height"],
         "duration": render_result["duration"],
     }
-
-
 @editor_bp.route("/render", methods=["POST"])
 def render_video():
     body = request.get_json(force=True) or {}
@@ -141,8 +129,6 @@ def render_video():
     except FFmpegError as e:
         return jsonify({"error": str(e), "stderr": getattr(e, "stderr", "")}), 500
     return jsonify(result)
-
-
 @editor_bp.route("/render-batch", methods=["POST"])
 def render_batch():
     body = request.get_json(force=True) or {}
@@ -162,8 +148,6 @@ def render_batch():
         except FFmpegError as e:
             results.append({"index": i, "error": str(e), "stderr": getattr(e, "stderr", "")})
     return jsonify({"results": results})
-
-
 @editor_bp.route("/upload-cloudinary", methods=["POST"])
 def upload_to_cloudinary():
     body = request.get_json(force=True) or {}
@@ -188,13 +172,12 @@ def upload_to_cloudinary():
         "cloudinary_public_id": result["public_id"],
         "cloudinary_url": result["secure_url"],
     })
+    log_service.log_frontend(f"Uploaded clip {clip_id} to Cloudinary", source="editor")
     return jsonify({
         "clip_id": clip_id,
         "cloudinary_url": result["secure_url"],
         "cloudinary_public_id": result["public_id"],
     })
-
-
 @editor_bp.route("/clips", methods=["GET"])
 def list_clips():
     try:
@@ -206,8 +189,27 @@ def list_clips():
         if c.get("filename"):
             c["preview_url"] = f"/api/editor/output/renders/{c['filename']}"
     return jsonify({"clips": clips})
-
-
+@editor_bp.route("/clips/<clip_id>", methods=["DELETE"])
+def delete_clip(clip_id):
+    clip = db_service.get_clip(clip_id)
+    if not clip:
+        return jsonify({"error": "Clip not found"}), 404
+    if clip.get("local_path"):
+        local_path = Path(clip["local_path"])
+        if local_path.exists():
+            local_path.unlink()
+    cloudinary_error = None
+    if clip.get("cloudinary_public_id"):
+        try:
+            cloudinary_service.delete_video(clip["cloudinary_public_id"])
+        except Exception as e:
+            cloudinary_error = str(e)
+    db_service.delete_clip(clip_id)
+    log_service.log_frontend(f"Deleted clip {clip_id}", source="editor")
+    result = {"deleted": clip_id}
+    if cloudinary_error:
+        result["cloudinary_warning"] = f"Local/DB deleted, but Cloudinary cleanup failed: {cloudinary_error}"
+    return jsonify(result)
 @editor_bp.route("/output/<path:subpath>", methods=["GET"])
 def serve_output(subpath):
     outputs_folder = current_app.config["OUTPUTS_FOLDER"]

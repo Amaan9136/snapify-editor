@@ -68,7 +68,7 @@
 .render-queue-item { display: flex; justify-content: space-between; align-items: center; background: #14171b; border: 1px solid #2a2f36; border-radius: 8px; padding: 8px 12px; font-size: 12px; }
 .render-queue-item button { background: transparent; border: none; color: #63696f; cursor: pointer; }
 
-.clip-card { background: #14171b; border: 1px solid #2a2f36; border-radius: 16px; overflow: hidden; }
+.clip-card { background: #14171b; border: 1px solid #2a2f36; border-radius: 16px; overflow: hidden; position: relative; }
 .clip-card video { width: 100%; aspect-ratio: 9/16; object-fit: cover; background: #000; display: block; }
 .clip-card-body { padding: 12px 14px; }
 .clip-card-title { font-size: 13.5px; font-weight: 600; margin-bottom: 4px; }
@@ -89,6 +89,22 @@
 .toggle-btn.is-active { background: rgba(255,122,26,0.1); border-color: #b85a12; color: #ff7a1a; }
 
 input[type="range"] { accent-color: #ff7a1a; }
+
+.logs-list { background: #0e1013; border: 1px solid #2a2f36; border-radius: 12px; padding: 6px; height: calc(100vh - 260px); min-height: 320px; overflow-y: auto; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+.log-row { display: grid; grid-template-columns: 84px 90px 1fr; gap: 10px; padding: 5px 8px; border-radius: 6px; align-items: baseline; }
+.log-row:hover { background: #14171b; }
+.log-row-time { color: #63696f; }
+.log-row-source { color: #ff7a1a; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.03em; }
+.log-row-message { color: #c7cbd1; word-break: break-word; }
+.log-row[data-level="warning"] .log-row-message { color: #ff7a1a; }
+.log-row[data-level="error"] .log-row-message, .log-row[data-level="critical"] .log-row-message { color: #ef4444; }
+#btn-pause-logs.is-active { background: rgba(255,122,26,0.1); border-color: #b85a12; color: #ff7a1a; }
+
+@media (max-width: 980px) {
+  .logs-list { height: calc(100vh - 320px); min-height: 260px; }
+  .log-row { grid-template-columns: 1fr; gap: 2px; padding: 8px; }
+  .log-row-time, .log-row-source { font-size: 10.5px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

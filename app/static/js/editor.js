@@ -2,7 +2,7 @@ const EditorView = (() => {
   let state = null;
 
   function freshState() {
-    return { filename: null, meta: null, trimStart: 0, trimEnd: 0, splitPoints: [], ratio: '9:16', customRatio: { w: 21, h: 9 }, panStart: { x: 0.5, y: 0.5 }, panEnd: null, settingPanTarget: 'start', speed: 1.0, brightness: 0.0, contrast: 1.0, saturation: 1.0, mute: false, volume: 1.0, title: '', queue: [], };
+    return { filename: null, meta: null, trimStart: 0, trimEnd: 0, splitPoints: [], ratio: '9:16', customRatio: { w: 21, h: 9 }, fitPad: true, panStart: { x: 0.5, y: 0.5 }, panEnd: null, settingPanTarget: 'start', speed: 1.0, brightness: 0.0, contrast: 1.0, saturation: 1.0, mute: false, volume: 1.0, title: '', queue: [], };
   }
 
   function init() {
@@ -19,6 +19,7 @@ const EditorView = (() => {
     });
     document.getElementById('custom-ratio-w').addEventListener('input', debounce(onCustomRatioChange, 250));
     document.getElementById('custom-ratio-h').addEventListener('input', debounce(onCustomRatioChange, 250));
+    document.getElementById('fit-pad-checkbox').addEventListener('change', (e) => { state.fitPad = e.target.checked; });
 
     document.getElementById('btn-play-pause').addEventListener('click', togglePlayback);
 
@@ -118,6 +119,7 @@ const EditorView = (() => {
     document.getElementById('volume-slider').value = 1;
     document.getElementById('volume-value').textContent = '1.00';
     document.getElementById('mute-checkbox').checked = false;
+    document.getElementById('fit-pad-checkbox').checked = true;
     applyCssFilterPreview();
     applyPlaybackRate();
     applyVolumePreview();
@@ -196,6 +198,7 @@ const EditorView = (() => {
     state.ratio = ratio;
     document.querySelectorAll('#ratio-picker button').forEach(b => b.classList.toggle('is-active', b.dataset.ratio === ratio));
     document.getElementById('custom-ratio-row').classList.toggle('hidden', ratio !== 'custom');
+    document.getElementById('fit-pad-row').classList.toggle('hidden', ratio === '9:16');
     document.getElementById('preview-frame').dataset.ratio = ratio === 'custom'
       ? `${state.customRatio.w}:${state.customRatio.h}` : ratio;
     if (ratio === 'custom') {
@@ -450,6 +453,7 @@ const EditorView = (() => {
       end: state.trimEnd,
       ratio: state.ratio,
       custom_ratio: state.ratio === 'custom' ? state.customRatio : null,
+      fit_pad: state.fitPad,
       pan_start: state.panStart,
       pan_end: state.panEnd,
       speed: state.speed,
@@ -508,8 +512,7 @@ const EditorView = (() => {
     } catch (e) {
       showToast(`Batch render failed: ${e.message}`, true);
     } finally {
-      btn.textContent = 'Render queue (0)';
-      document.getElementById('queue-count').textContent = 0;
+      btn.innerHTML = 'Render queue (<span id="queue-count">0</span>)';
     }
   }
 

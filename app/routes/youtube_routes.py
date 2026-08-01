@@ -1,13 +1,8 @@
 from datetime import datetime, timezone
-
 from flask import Blueprint, current_app, jsonify, redirect, request, session
-
-from app.services import youtube_service, db_service
+from app.services import youtube_service, db_service, log_service
 from app.services.youtube_service import YouTubeAuthError, YouTubeUploadError
-
 youtube_bp = Blueprint("youtube", __name__)
-
-
 @youtube_bp.route("/authorize", methods=["GET"])
 def authorize():
     try:
@@ -16,8 +11,6 @@ def authorize():
         return jsonify({"error": str(e)}), 400
     session["youtube_oauth_state"] = state
     return redirect(auth_url)
-
-
 @youtube_bp.route("/oauth2callback", methods=["GET"])
 def oauth2callback():
     state = session.get("youtube_oauth_state")
@@ -34,14 +27,10 @@ def oauth2callback():
     <script>setTimeout(() => window.close(), 2000);</script>
     </body></html>
     """
-
-
 @youtube_bp.route("/status", methods=["GET"])
 def status():
     ok, message = youtube_service.check_connection(current_app.config)
     return jsonify({"authorized": ok, "message": message})
-
-
 @youtube_bp.route("/upload-now", methods=["POST"])
 def upload_now():
     body = request.get_json(force=True) or {}
@@ -71,9 +60,8 @@ def upload_now():
         "youtube_video_id": result["video_id"],
         "youtube_url": result["url"],
     })
+    log_service.log_frontend(f"Published clip {clip_id} to YouTube: {result['url']}", source="youtube")
     return jsonify(result)
-
-
 @youtube_bp.route("/schedule", methods=["POST"])
 def schedule_upload():
     body = request.get_json(force=True) or {}
@@ -104,9 +92,8 @@ def schedule_upload():
     })
     job["_id"] = str(job["_id"])
     job["scheduled_for"] = job["scheduled_for"].isoformat()
+    log_service.log_frontend(f"Scheduled clip {clip_id} for {job['scheduled_for']}", source="youtube")
     return jsonify(job)
-
-
 @youtube_bp.route("/jobs", methods=["GET"])
 def list_jobs():
     jobs = db_service.list_upload_jobs()

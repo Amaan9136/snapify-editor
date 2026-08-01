@@ -1,14 +1,10 @@
 import json
 import re
 import requests
-
 DEFAULT_TIMEOUT = 60
-
 PROMPT_TEMPLATE = """You are a social media assistant helping to prepare a YouTube Shorts upload.
-
 Context about the clip:
 {context}
-
 Generate the following, and respond with ONLY valid JSON (no markdown fences, no commentary), matching this exact schema:
 {{
   "title": "a catchy, click-worthy YouTube Shorts title, under 90 characters",
@@ -16,20 +12,14 @@ Generate the following, and respond with ONLY valid JSON (no markdown fences, no
   "hashtags": ["#example1", "#example2", "... 8-15 relevant hashtags including #Shorts"]
 }}
 """
-
-
 class OllamaError(RuntimeError):
     pass
-
-
 def _headers(app_config):
     headers = {"Content-Type": "application/json"}
     api_key = app_config.get("OLLAMA_API_KEY")
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
     return headers
-
-
 def _extract_json(text):
     text = text.strip()
     fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
@@ -40,8 +30,6 @@ def _extract_json(text):
         if brace_match:
             text = brace_match.group(0)
     return json.loads(text)
-
-
 def generate_metadata(app_config, context_description, extra_instructions=None):
     host = app_config.get("OLLAMA_HOST", "https://ollama.com").rstrip("/")
     model = app_config.get("OLLAMA_MODEL", "gpt-oss:20b-cloud")
@@ -83,8 +71,6 @@ def generate_metadata(app_config, context_description, extra_instructions=None):
         "hashtags": hashtags,
         "raw": raw_content,
     }
-
-
 def check_connection(app_config):
     host = app_config.get("OLLAMA_HOST", "https://ollama.com").rstrip("/")
     try:

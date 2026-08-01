@@ -3,10 +3,8 @@ import shlex
 import subprocess
 import uuid
 from pathlib import Path
-
 FFMPEG_BIN = "ffmpeg"
 FFPROBE_BIN = "ffprobe"
-
 ASPECT_RATIOS = {
     "9:16": (9, 16),
     "16:9": (16, 9),
@@ -15,15 +13,11 @@ ASPECT_RATIOS = {
     "4:3": (4, 3),
     "3:4": (3, 4),
 }
-
-
 class FFmpegError(RuntimeError):
     def __init__(self, message, stderr="", cmd=None):
         super().__init__(message)
         self.stderr = stderr
         self.cmd = cmd
-
-
 def _run(cmd, timeout=None):
     try:
         result = subprocess.run(
@@ -44,8 +38,6 @@ def _run(cmd, timeout=None):
             cmd=cmd,
         )
     return result
-
-
 def probe(path):
     cmd = [
         FFPROBE_BIN,
@@ -99,8 +91,6 @@ def probe(path):
         "rotation": rotation,
         "bit_rate": int(fmt.get("bit_rate") or 0),
     }
-
-
 def generate_thumbnail(video_path, out_path, timestamp=1.0):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     cmd = [
@@ -113,8 +103,6 @@ def generate_thumbnail(video_path, out_path, timestamp=1.0):
     ]
     _run(cmd, timeout=30)
     return out_path
-
-
 def generate_preview_proxy(video_path, out_path, max_height=480):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     scale_filter = f"scale=-2:'min({max_height},ih)'"
@@ -132,8 +120,6 @@ def generate_preview_proxy(video_path, out_path, max_height=480):
     ]
     _run(cmd, timeout=600)
     return out_path
-
-
 def _target_dims_for_ratio(src_w, src_h, ratio_key, custom_ratio=None):
     if ratio_key == "custom" and custom_ratio:
         rw, rh = custom_ratio
@@ -150,8 +136,6 @@ def _target_dims_for_ratio(src_w, src_h, ratio_key, custom_ratio=None):
     crop_w -= crop_w % 2
     crop_h -= crop_h % 2
     return crop_w, crop_h
-
-
 def build_crop_pan_filter(src_w, src_h, ratio_key, custom_ratio=None,
                            pan_start=None, pan_end=None, duration=None):
     crop_w, crop_h = _target_dims_for_ratio(src_w, src_h, ratio_key, custom_ratio)
@@ -173,8 +157,17 @@ def build_crop_pan_filter(src_w, src_h, ratio_key, custom_ratio=None,
         y_expr = f"{y0}+({y1}-{y0})*{expr_progress}"
         filter_str = f"crop={crop_w}:{crop_h}:x='{x_expr}':y='{y_expr}'"
     return filter_str, crop_w, crop_h
-
-
+def build_pad_to_916_filter(crop_w, crop_h):
+    canvas_w, canvas_h = 1080, 1920
+    scale = min(canvas_w / crop_w, canvas_h / crop_h)
+    scaled_w = int(round(crop_w * scale))
+    scaled_h = int(round(crop_h * scale))
+    scaled_w -= scaled_w % 2
+    scaled_h -= scaled_h % 2
+    x_offset = (canvas_w - scaled_w) // 2
+    y_offset = (canvas_h - scaled_h) // 2
+    filter_str = f"scale={scaled_w}:{scaled_h},pad={canvas_w}:{canvas_h}:{x_offset}:{y_offset}:color=black"
+    return filter_str, canvas_w, canvas_h
 def trim_clip(video_path, out_path, start, end, ratio_key=None, custom_ratio=None,
               pan_start=None, pan_end=None, src_dims=None, reencode_audio=True):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
@@ -207,8 +200,6 @@ def trim_clip(video_path, out_path, start, end, ratio_key=None, custom_ratio=Non
     cmd += ["-movflags", "+faststart", str(out_path)]
     _run(cmd, timeout=1800)
     return out_path
-
-
 def split_video_at_points(video_path, split_points, out_dir, base_name=None):
     meta = probe(video_path)
     duration = meta["duration"]
@@ -223,11 +214,9 @@ def split_video_at_points(video_path, split_points, out_dir, base_name=None):
         trim_clip(video_path, seg_path, start, end, src_dims=(meta["width"], meta["height"]))
         segments.append({"path": seg_path, "start": start, "end": end, "index": i + 1})
     return segments
-
-
 def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
                  pan_start=None, pan_end=None, volume=1.0, mute=False,
-                 speed=1.0, brightness=None, contrast=None, saturation=None):
+                 speed=1.0, brightness=None, contrast=None, saturation=None, fit_pad=True):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     meta = probe(video_path)
     src_w, src_h = meta["width"], meta["height"]
@@ -236,6 +225,9 @@ def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
         src_w, src_h, ratio_key, custom_ratio, pan_start, pan_end, max(0.0, end - start)
     )
     vfilters.append(crop_filter)
+    if fit_pad and ratio_key != "9:16":
+        pad_filter, out_w, out_h = build_pad_to_916_filter(out_w, out_h)
+        vfilters.append(pad_filter)
     if speed and speed != 1.0:
         vfilters.append(f"setpts={1/speed:.6f}*PTS")
     eq_parts = []
@@ -280,8 +272,6 @@ def render_reel(video_path, out_path, start, end, ratio_key, custom_ratio=None,
     _run(cmd, timeout=1800)
     out_meta = probe(out_path)
     return {"path": out_path, "width": out_w, "height": out_h, "duration": out_meta["duration"]}
-
-
 def list_video_files(folder):
     from app.config import Config
     exts = Config.ALLOWED_VIDEO_EXTENSIONS
